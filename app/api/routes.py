@@ -156,11 +156,13 @@ async def simulate_fleet_step(req: SimulationStepRequest, request: Request) -> d
 
 @router.get("/api/incidents")
 @router.get("/api/v1/incidents")
-async def get_incidents_journal() -> dict[str, Any]:
+async def get_incidents_journal(request: Request) -> dict[str, Any]:
     """Retrieve structured audit logs of autonomous multi-agent decisions."""
+    sim = getattr(request.app.state, "simulator", None)
+    journal = sim.incident_journal if sim and hasattr(sim, "incident_journal") else _incident_journal
     return {
-        "count": len(_incident_journal),
-        "incidents": _incident_journal,
+        "count": len(journal),
+        "incidents": journal,
     }
 
 

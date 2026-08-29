@@ -95,6 +95,40 @@ class FleetSimulator:
     def __init__(self, coordinator: DecisionCoordinatorAgent | None = None) -> None:
         self.coordinator = coordinator or DecisionCoordinatorAgent()
         self.riders: dict[str, RiderState] = {}
+        self.incident_journal: list[dict[str, Any]] = [
+            {
+                "incident_id": "INC-2026-0803-001",
+                "timestamp": "14:15",
+                "rider_id": "R3",
+                "rider_name": "Marcus Vance",
+                "aoi_id": "van_buren_corridor",
+                "incident_type": "CRITICAL_HEAT_WARNING",
+                "action_taken": "MANDATORY_STOP_REQUIRED",
+                "surface_temp_c": 46.4,
+                "heat_index_c": 48.2,
+                "persistence_hours": 9.7,
+                "risk_score": 0.7598,
+                "risk_tier": "Critical",
+                "osha_guideline": "Mandatory 20-minute indoor A/C cooldown + 24 oz fluids.",
+                "status": "DISPATCH_ESCALATED",
+            },
+            {
+                "incident_id": "INC-2026-0803-002",
+                "timestamp": "15:40",
+                "rider_id": "R6",
+                "rider_name": "David Kim",
+                "aoi_id": "van_buren_corridor",
+                "incident_type": "SHADED_CORRIDOR_REROUTE",
+                "action_taken": "AUTONOMOUS_REROUTE_ACTIVATED",
+                "surface_temp_c": 46.3,
+                "heat_index_c": 48.1,
+                "risk_score": 0.7598,
+                "destination_refuge": "Encanto Park Shaded Refuge / University Park Ramada",
+                "delta_temp_c": -10.8,
+                "detour_distance_km": 2.21,
+                "status": "REROUTED_TO_SHADE",
+            },
+        ]
         self._initialize_riders()
 
     def _initialize_riders(self) -> None:
@@ -186,6 +220,29 @@ class FleetSimulator:
                     "rider_id": rider_id,
                     "reroute": eval_state.reroute.model_dump(mode="json"),
                 })
+                # Auto-record into incident journal
+                inc_id = f"INC-{sim_time.replace(':', '')}-{rider_id}-REROUTE"
+                if not any(j["incident_id"] == inc_id for j in self.incident_journal):
+                    cfg = next((c for c in RIDER_CONFIGS if c["rider_id"] == rider_id), None)
+                    r_name = cfg["name"] if cfg else rider_id
+                    sel = eval_state.reroute.selected_option
+                    entry = {
+                        "incident_id": inc_id,
+                        "timestamp": sim_time,
+                        "rider_id": rider_id,
+                        "rider_name": r_name,
+                        "aoi_id": state.current_aoi_id or "van_buren_corridor",
+                        "incident_type": "SHADED_CORRIDOR_REROUTE",
+                        "action_taken": "AUTONOMOUS_REROUTE_ACTIVATED",
+                        "surface_temp_c": round(getattr(eval_state.heat_perception, "surface_temp_c", 46.0), 1) if eval_state.heat_perception else 46.0,
+                        "heat_index_c": round(getattr(eval_state.heat_perception, "heat_index_c", 48.0), 1) if eval_state.heat_perception else 48.0,
+                        "risk_score": round(state.current_risk_score or 0.75, 4),
+                        "destination_refuge": getattr(sel, "refuge_name", "Encanto Park Shaded Refuge") if sel else "Encanto Park Shaded Refuge",
+                        "delta_temp_c": round(getattr(sel, "delta_temperature_c", -10.8), 1) if sel else -10.8,
+                        "detour_distance_km": round(getattr(sel, "distance_km", 2.21), 2) if sel else 2.21,
+                        "status": "REROUTED_TO_SHADE",
+                    }
+                    self.incident_journal.insert(0, entry)
 
             if eval_state.alert and eval_state.alert.alert_triggered:
                 state.last_alert_level = eval_state.alert.alert_level
@@ -193,6 +250,28 @@ class FleetSimulator:
                     "rider_id": rider_id,
                     "alert": eval_state.alert.model_dump(mode="json"),
                 })
+                # Auto-record into incident journal
+                is_crit = eval_state.alert.alert_level == "critical"
+                inc_id = f"INC-{sim_time.replace(':', '')}-{rider_id}-ALERT"
+                if not any(j["incident_id"] == inc_id for j in self.incident_journal):
+                    cfg = next((c for c in RIDER_CONFIGS if c["rider_id"] == rider_id), None)
+                    r_name = cfg["name"] if cfg else rider_id
+                    entry = {
+                        "incident_id": inc_id,
+                        "timestamp": sim_time,
+                        "rider_id": rider_id,
+                        "rider_name": r_name,
+                        "aoi_id": state.current_aoi_id or "downtown_phoenix",
+                        "incident_type": "CRITICAL_HEAT_WARNING" if is_crit else "HEAT_WARNING",
+                        "action_taken": "MANDATORY_STOP_REQUIRED" if getattr(eval_state.alert, "mandatory_stop_required", False) else "DETOUR_RECOMMENDED",
+                        "surface_temp_c": round(getattr(eval_state.heat_perception, "surface_temp_c", 46.4), 1) if eval_state.heat_perception else 46.4,
+                        "heat_index_c": round(getattr(eval_state.heat_perception, "heat_index_c", 48.2), 1) if eval_state.heat_perception else 48.2,
+                        "risk_score": round(state.current_risk_score or 0.75, 4),
+                        "risk_tier": state.current_risk_tier or ("Critical" if is_crit else "High"),
+                        "osha_guideline": getattr(eval_state.alert, "osha_guideline", "") or "Mandatory cooling break and fluid replenishment.",
+                        "status": "DISPATCH_ESCALATED" if is_crit else "ADVISORY_ACTIVE",
+                    }
+                    self.incident_journal.insert(0, entry)
 
         return FleetSimulationState(
             simulation_time=sim_time,
