@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoolPath | Autonomous Microclimate Risk Intelligence & Fleet Refuge Dispatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --bg-base: #070a13;
+      --bg-surface: #0e1526;
+      --bg-surface-glass: rgba(14, 21, 38, 0.9);
+      --bg-card: rgba(20, 29, 51, 0.75);
+      --bg-card-hover: rgba(28, 41, 71, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.3);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --metric-bg: rgba(0, 0, 0, 0.3);
+      --clock-bg: rgba(10, 16, 30, 0.9);
+      --summary-bg: rgba(10, 16, 30, 0.95);
+      --slider-bg: #1e293b;
+      --row-bg: rgba(15, 23, 42, 0.5);
+      --popup-bg: #0e1526;
+      --map-bg: #070a13;
+
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-orange: #f97316;
+      --accent-danger: #ef4444;
+
+      --tier-low: #10b981;
+      --tier-mod: #f59e0b;
+      --tier-high: #f97316;
+      --tier-critical: #ef4444;
+    }
+
+    body.light-mode {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-glass: rgba(255, 255, 255, 0.94);
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-glow: rgba(2, 132, 199, 0.25);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --metric-bg: #f1f5f9;
+      --clock-bg: #ffffff;
+      --summary-bg: #ffffff;
+      --slider-bg: #cbd5e1;
+      --row-bg: #ffffff;
+      --popup-bg: #ffffff;
+      --map-bg: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.55rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.1rem;
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .sim-clock-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: var(--clock-bg);
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-glow);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, var(--accent-cyan));
+      border: none;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: var(--accent-danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--accent-danger);
+      color: #fff;
+    }
+
+    /* Persistent Top Fleet Summary Bar */
+    .fleet-summary-bar {
+      background: var(--summary-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.35rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      z-index: 999;
+    }
+
+    .summary-metrics-group {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .summary-metric {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .summary-metric b {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .summary-pill {
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .summary-pill.critical {
+      background: rgba(239, 68, 68, 0.18);
+      color: var(--accent-danger);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .summary-pill.reroute {
+      background: rgba(6, 182, 212, 0.18);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+    }
+
+    /* Main Container Layout: 18% / 64% / 18% */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(260px, 18vw) 1fr minmax(260px, 18vw);
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Fleet & AOI Overview */
+    .sidebar-left {
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 500;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 0.65rem 0.75rem 0.3rem 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Sidebar Rider Cards */
+    .rider-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin: 0.25rem 0.6rem;
+      padding: 0.55rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      height: auto !important;
+      min-height: 90px;
+      overflow: hidden;
+      padding-bottom: 10px;
+    }
+
+    .rider-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-cyan);
+    }
+
+    .rider-card.critical {
+      border-color: var(--accent-danger);
+      background: rgba(239, 68, 68, 0.12);
+      animation: alertPulse 2s infinite;
+      border-radius: 8px;
+    }
+
+    .rider-card.reroute-active {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.12);
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.25); }
+      50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.55); }
+    }
+
+    .rider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .rider-id-badge {
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .state-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.1rem 0.38rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .state-pill.state-low { background: rgba(16, 185, 129, 0.18); color: var(--tier-low); border: 1px solid var(--tier-low); }
+    .state-pill.state-moderate { background: rgba(245, 158, 11, 0.18); color: var(--tier-mod); border: 1px solid var(--tier-mod); }
+    .state-pill.state-high { background: rgba(249, 115, 22, 0.18); color: var(--tier-high); border: 1px solid var(--tier-high); }
+    .state-pill.state-critical, .state-pill.state-reroute, .state-pill.state-rerouted { background: rgba(239, 68, 68, 0.22); color: var(--tier-critical); border: 1px solid var(--tier-critical); }
+
+    .rider-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      margin-top: 0.35rem;
+    }
+
+    .metric-item {
+      background: var(--metric-bg);
+      padding: 0.25rem 0.4rem;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .metric-label { color: var(--text-muted); }
+    .metric-val { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+    /* Center Map Area: 64% visual priority */
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: var(--map-bg);
+    }
+
+    /* Collapsible Map Legend Button & Panel */
+    .map-legend-toggle {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      z-index: 400;
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .map-legend-toggle:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .map-floating-overlay {
+      position: absolute;
+      top: 2.8rem;
+      right: 0.75rem;
+      z-index: 400;
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    .map-floating-overlay.hidden {
+      display: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Right Sidebar: Clean Grouped Activity Feed */
+    .sidebar-right {
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 500;
+    }
+
+    .feed-container {
+      padding: 0.5rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .feed-time-group {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      padding: 0.3rem 0.2rem 0.1rem 0.2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Hero Most-Recent Critical Card */
+    .incident-hero-card {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 0.65rem;
+      font-size: 0.74rem;
+      box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
+    }
+
+    .incident-hero-card.reroute-hero {
+      background: rgba(6, 182, 212, 0.12);
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.15);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .hero-badge.critical {
+      background: var(--accent-danger);
+      color: #fff;
+    }
+
+    .hero-badge.reroute {
+      background: var(--accent-cyan);
+      color: #0b1120;
+    }
+
+    /* Compressed Single-Line Console Log Rows */
+    .incident-log-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--row-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 0.3rem 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+    }
+
+    .incident-log-row:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .incident-log-time {
+      color: var(--text-muted);
+      font-size: 0.62rem;
+    }
+
+    .incident-log-tag {
+      font-weight: 700;
+      font-size: 0.62rem;
+    }
+
+    .incident-log-tag.crit { color: var(--accent-danger); }
+    .incident-log-tag.warn { color: var(--accent-orange); }
+    .incident-log-tag.reroute { color: var(--accent-cyan); }
+
+    .incident-log-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    /* Bottom Timeline Scrubber */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 0.55rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    .timeline-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--slider-bg);
+      outline: none;
+    }
+
+    .timeline-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    /* Tooltip styles */
+    .coolpath-tooltip {
+      background: rgba(14, 21, 38, 0.95) !important;
+      border: 1px solid var(--accent-cyan) !important;
+      color: #f8fafc !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.7rem !important;
+      font-weight: 600 !important;
+      border-radius: 6px !important;
+      padding: 0.2rem 0.5rem !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4) !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-logo">C</div>
+      <div>
+        <div class="brand-title">CoolPath Microclimate Fleet Intelligence</div>
+      </div>
+      <span class="brand-badge">Phoenix Pilot (2026-08-03)</span>
+    </div>
+
+    <div class="header-controls">
+      <!-- Light / Dark Theme Toggle Switch -->
+      <button class="btn" id="theme-toggle" onclick="toggleTheme()" title="Switch Light/Dark Theme">
+        <span id="themeIcon">☀️</span> <span id="themeLabel">Light</span>
+      </button>
+
+      <div class="sim-clock-display">
+        <span class="status-indicator"></span>
+        <span id="simTimeClock">14:15</span>
+        <span style="font-size: 0.68rem; color: var(--text-muted);">MST</span>
+      </div>
+      <button class="btn" id="btnPlayPause" onclick="togglePlayback()">
+        <span id="playIcon">▶</span> <span id="playLabel">Start</span>
+      </button>
+      <button class="btn btn-danger" onclick="triggerDrillR3()">
+        ⚡ Drill: R3 Van Buren
+      </button>
+      <button class="btn btn-primary" onclick="triggerDrillR6()">
+        🌿 Drill: R6 Encanto
+      </button>
+    </div>
+  </header>
+
+  <!-- Persistent Top Fleet Summary Bar -->
+  <div class="fleet-summary-bar" id="fleetSummaryBar">
+    <div class="summary-metrics-group">
+      <div class="summary-metric">
+        <span>Fleet:</span> <b id="summaryTotalRiders">6 Active</b>
+      </div>
+      <div class="summary-metric">
+        <span class="summary-pill critical" id="summaryCriticalPill">2 Critical</span>
+      </div>
+      <div class="summary-metric">
+        <span class="summary-pill reroute" id="summaryReroutedPill">1 Rerouted</span>
+      </div>
+      <div class="summary-metric">
+        <span>Avg ΔT Savings:</span> <b style="color: var(--accent-emerald);" id="summaryAvgDeltaT">-8.7°C</b>
+      </div>
+    </div>
+    <div style="color: var(--text-muted); font-size: 0.7rem;">
+      OSHA Heat Standard: <b>15-Min Safe Floor Active</b>
+    </div>
+  </div>
+
+  <!-- Main 18% / 64% / 18% Balanced Layout -->
+  <main>
+    <!-- Left Panel: Density-First Fleet Roster & AOIs (18%) -->
+    <section class="sidebar-left">
+      <div class="section-title">
+        <span>Fleet Telemetry</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);">6 Units</span>
+      </div>
+      <div id="fleetRosterContainer">
+        <!-- Pre-rendered semantic rider cards with data attributes for robust binding -->
+        <div class="rider-card" data-rider-id="R1">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R1</span> <span style="font-size:0.68rem; color:var(--text-muted);">Downtown Core</span></span>
+            <span class="state-pill state-low" data-field="state-pill">LOW</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score">0.12</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">15 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-cyan); font-size:0.68rem; font-weight:700; margin-top:0.35rem; display:none;"></div>
+        </div>
+
+        <div class="rider-card" data-rider-id="R2">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R2</span> <span style="font-size:0.68rem; color:var(--text-muted);">Arcadia Grid</span></span>
+            <span class="state-pill state-low" data-field="state-pill">LOW</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score">0.18</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">15 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-cyan); font-size:0.68rem; font-weight:700; margin-top:0.35rem; display:none;"></div>
+        </div>
+
+        <div class="rider-card critical" data-rider-id="R3">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R3</span> <span style="font-size:0.68rem; color:var(--text-muted);">Van Buren Trap</span></span>
+            <span class="state-pill state-critical" data-field="state-pill">CRITICAL</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score" style="color:var(--accent-danger);">0.76</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">8 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-danger); font-size:0.68rem; font-weight:700; margin-top:0.35rem;">⚠️ MANDATORY REST STOP ENFORCED</div>
+        </div>
+
+        <div class="rider-card" data-rider-id="R4">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R4</span> <span style="font-size:0.68rem; color:var(--text-muted);">Downtown Core</span></span>
+            <span class="state-pill state-moderate" data-field="state-pill">MODERATE</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score">0.45</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">15 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-cyan); font-size:0.68rem; font-weight:700; margin-top:0.35rem; display:none;"></div>
+        </div>
+
+        <div class="rider-card" data-rider-id="R5">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R5</span> <span style="font-size:0.68rem; color:var(--text-muted);">Encanto Refuge</span></span>
+            <span class="state-pill state-low" data-field="state-pill">LOW</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score">0.10</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">14 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-cyan); font-size:0.68rem; font-weight:700; margin-top:0.35rem; display:none;"></div>
+        </div>
+
+        <div class="rider-card reroute-active" data-rider-id="R6">
+          <div class="rider-header">
+            <span class="rider-id-badge"><span>🛵 R6</span> <span style="font-size:0.68rem; color:var(--text-muted);">Van Buren -> Encanto</span></span>
+            <span class="state-pill state-reroute" data-field="state-pill">REROUTE</span>
+          </div>
+          <div class="rider-metrics">
+            <div class="metric-item"><span class="metric-label">Risk</span><span class="metric-val" data-field="risk-score">0.76</span></div>
+            <div class="metric-item"><span class="metric-label">Speed</span><span class="metric-val">12 km/h</span></div>
+          </div>
+          <div data-field="delta-t" style="color:var(--accent-cyan); font-size:0.68rem; font-weight:700; margin-top:0.35rem;">SHADED DETOUR: -10.8°C DROP</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top: 0.4rem;">
+        <span>Phoenix AOIs</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);">4 Polygons</span>
+      </div>
+      <div style="padding: 0 0.6rem; font-size: 0.74rem; display: flex; flex-direction: column; gap: 0.25rem;" id="aoiMetricsContainer">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <!-- Center: Interactive Leaflet Geospatial Map (64%) -->
+    <section class="map-container">
+      <div id="map"></div>
+      
+      <!-- Collapsible Map Legend Toggle Button -->
+      <button class="map-legend-toggle" onclick="toggleMapLegend()">
+        <span>🗺️</span> <span id="legendToggleText">Legend</span>
+      </button>
+
+      <!-- Collapsible Floating Map Legend -->
+      <div class="map-floating-overlay" id="mapLegendOverlay">
+        <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem;">Thermal Overlay & Refuge Legend</div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(239, 68, 68, 0.4); border: 1px solid #ef4444;"></div>
+          <span>Van Buren Corridor (46.2°C Hotspot)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(249, 115, 22, 0.4); border: 1px solid #f97316;"></div>
+          <span>Downtown Core (42.8°C)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(245, 158, 11, 0.4); border: 1px solid #f59e0b;"></div>
+          <span>Arcadia Residential (39.5°C)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(16, 185, 129, 0.4); border: 1px solid #10b981;"></div>
+          <span>Encanto Park Shaded Refuge (33.4°C)</span>
+        </div>
+        <div class="legend-item" style="margin-top: 0.2rem;">
+          <div style="width: 14px; height: 3px; background: #38bdf8;"></div>
+          <span style="color: #38bdf8;">Autonomous Cool Corridor Reroute</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Clean Grouped Activity Feed (18%) -->
+    <section class="sidebar-right">
+      <div class="section-title">
+        <span>Autonomous Decision Feed</span>
+        <span style="font-size: 0.65rem; color: var(--accent-cyan);">Live Agent Ticker</span>
+      </div>
+      <div class="feed-container" id="feedContainer">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Timeline Scrubber -->
+  <footer>
+    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); min-width: 90px;">
+      1:00 PM (13:00)
+    </div>
+    <input type="range" min="780" max="1000" step="5" value="855" class="timeline-slider" id="timeScrubber" oninput="onScrubberChange(this.value)">
+    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); min-width: 90px; text-align: right;">
+      4:40 PM (16:40)
+    </div>
+  </footer>
+
+  <!-- Front-End Application Logic -->
+  <script>
+    // State & Map Layers
+    let map;
+    let darkTileLayer, lightTileLayer;
+    let currentTheme = 'dark';
+    let aoiLayers = {};
+    let isPlaying = false;
+    let ws;
+    let currentSimTime = "14:15";
+
+    // 4 Phoenix AOIs
+    const AOI_DEFINITIONS = {
+      "downtown_phoenix": {
+        name: "Downtown Core",
+        center: [33.4484, -112.0740],
+        polygon: [[33.4434, -112.0790], [33.4534, -112.0790], [33.4534, -112.0690], [33.4434, -112.0690]],
+        temp: "42.8°C",
+        color: "#f97316",
+        desc: "Urban heat island"
+      },
+      "arcadia_residential": {
+        name: "Arcadia Grid",
+        center: [33.4700, -112.0100],
+        polygon: [[33.460, -112.020], [33.480, -112.020], [33.480, -112.000], [33.460, -112.000]],
+        temp: "39.5°C",
+        color: "#f59e0b",
+        desc: "Suburban residential"
+      },
+      "encanto_park": {
+        name: "Encanto Refuge",
+        center: [33.4270, -112.0870],
+        polygon: [[33.4220, -112.0920], [33.4320, -112.0920], [33.4320, -112.0820], [33.4220, -112.0820]],
+        temp: "33.4°C",
+        color: "#10b981",
+        desc: "48.5% Tree Canopy"
+      },
+      "van_buren_corridor": {
+        name: "Van Buren Trap",
+        center: [33.4480, -112.0450],
+        polygon: [[33.4430, -112.0500], [33.4530, -112.0500], [33.4530, -112.0400], [33.4430, -112.0400]],
+        temp: "46.2°C",
+        color: "#ef4444",
+        desc: "Worst-case heat zone"
+      }
+    };
+
+    // Initialize Map & Tile Layers
+    function initMap() {
+      map = L.map('map', {
+        center: [33.4450, -112.0550],
+        zoom: 13,
+        zoomControl: false,
+      });
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // CartoDB Dark Matter tile layer
+      darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+      });
+
+      // CartoDB Positron Light tile layer
+      lightTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+      });
+
+      darkTileLayer.addTo(map);
+      renderAOIs();
+    }
+
+    // Toggle Light / Dark Theme
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.classList.toggle('light-mode', currentTheme === 'light');
+
+      if (currentTheme === 'light') {
+        map.removeLayer(darkTileLayer);
+        lightTileLayer.addTo(map);
+        document.getElementById('themeIcon').innerText = "🌙";
+        document.getElementById('themeLabel').innerText = "Dark";
+      } else {
+        map.removeLayer(lightTileLayer);
+        darkTileLayer.addTo(map);
+        document.getElementById('themeIcon').innerText = "☀️";
+        document.getElementById('themeLabel').innerText = "Light";
+      }
+    }
+
+    function toggleMapLegend() {
+      const overlay = document.getElementById('mapLegendOverlay');
+      overlay.classList.toggle('hidden');
+      const isHidden = overlay.classList.contains('hidden');
+      document.getElementById('legendToggleText').innerText = isHidden ? "Show Legend" : "Hide Legend";
+    }
+
+    function renderAOIs() {
+      const container = document.getElementById('aoiMetricsContainer');
+      container.innerHTML = '';
+
+      for (const [id, aoi] of Object.entries(AOI_DEFINITIONS)) {
+        const color = aoi.color || "#06b6d4";
+        const geoLayer = L.polygon(aoi.polygon, {
+          color: color,
+          weight: 2,
+          opacity: 0.85,
+          fillColor: color,
+          fillOpacity: 0.22
+        }).addTo(map);
+
+        geoLayer.bindPopup(`
+          <div style="font-weight:700; font-size:13px; color:${color}; margin-bottom:3px;">${aoi.name}</div>
+          <div style="font-size:11px; margin-bottom:5px;">${aoi.desc}</div>
+          <div style="font-size:10px; font-family:monospace; color:var(--text-muted);">Baseline Temp: ${aoi.temp}</div>
+        `);
+
+        aoiLayers[id] = geoLayer;
+
+        const card = document.createElement('div');
+        card.style.cssText = `background:var(--row-bg); border:1px solid var(--border-subtle); border-left:3px solid ${color}; padding:0.32rem 0.5rem; border-radius:4px; margin-bottom:0.2rem; cursor:pointer;`;
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:600;">
+            <span>${aoi.name}</span>
+            <span style="color:${color}; font-family:monospace; font-size:0.7rem;">${aoi.temp}</span>
+          </div>
+          <div style="font-size:0.65rem; color:var(--text-muted);">${aoi.desc}</div>
+        `;
+        card.onclick = () => map.setView(aoi.center, 14);
+        container.appendChild(card);
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // GLOBAL STATE
+    // ---------------------------------------------------------------------------
+    const riderState = new Map();
+    const routesCache = new Map();
+    const routesInFlight = new Set();
+
+    // ---------------------------------------------------------------------------
+    // WEBSOCKET HANDLER — NON-BLOCKING, SINGLE LISTENER
+    // ---------------------------------------------------------------------------
+    function handleWebSocketMessage(event) {
+      let payload;
+      try {
+        payload = JSON.parse(event.data);
+      } catch (e) { return; }
+
+      // Adapter: bridge FastAPI envelope {"type":"fleet_update","data":{"riders":{...}}}
+      // to the flat [{id, lat, lng, risk_score, state, delta_t, ...}] format the engine expects.
+      let updates = [];
+      if (payload && payload.type === "fleet_update" && payload.data && payload.data.riders) {
+        if (payload.simulation_time) {
+          currentSimTime = payload.simulation_time;
+          const clockEl = document.getElementById('simTimeClock');
+          if (clockEl) clockEl.innerText = payload.simulation_time;
+          const parts = payload.simulation_time.split(':');
+          if (parts.length === 2) {
+            const totalMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            const scrubberEl = document.getElementById('timeScrubber');
+            if (scrubberEl) scrubberEl.value = totalMins;
+          }
+        }
+        for (const [rid, rdata] of Object.entries(payload.data.riders)) {
+          const coord = rdata.current_coordinate || {};
+          const isCrit = (rdata.current_risk_score || 0) >= 0.75 || rdata.current_risk_tier === "Critical";
+          const isReroute = rdata.active_reroute != null;
+          const deltaTVal = rdata.active_reroute?.selected_option?.delta_temperature_c;
+
+          let routeWaypoints = null;
+          if (rdata.active_reroute?.selected_option?.polyline) {
+            routeWaypoints = rdata.active_reroute.selected_option.polyline.map(p => [p.lat, p.lng]);
+          } else if (rid === "R6") {
+            routeWaypoints = [[coord.lat, coord.lng], [33.4270, -112.0870]];
+          }
+          updates.push({
+            id: rid, lat: coord.lat, lng: coord.lng, risk_score: rdata.current_risk_score || 0,
+            state: isCrit ? 'CRITICAL' : (isReroute ? 'REROUTE' : (rdata.current_risk_tier || 'LOW')),
+            delta_t: deltaTVal, dest_lat: 33.4270, dest_lng: -112.0870, route_waypoints: routeWaypoints
+          });
+        }
+      } else {
+        updates = Array.isArray(payload) ? payload : [payload];
+      }
+
+      for (const rider of updates) ingestRiderUpdate(rider);
+      updateSummaryMetrics();
+      fetchIncidents();
+    }
+
+    function ingestRiderUpdate(rider) {
+      // FORCE FLOATS — prevent string coords causing NaN math that freezes markers
+      const safeLat = parseFloat(rider.lat);
+      const safeLng = parseFloat(rider.lng);
+      if (rider.id == null || isNaN(safeLat) || isNaN(safeLng)) return;
+
+      const rawLatLng = L.latLng(safeLat, safeLng);
+      const deltaT = resolveDeltaT(rider.id, rider.delta_t);
+
+      let entry = riderState.get(rider.id);
+      if (!entry) {
+        entry = createRiderEntry(rider.id, rawLatLng, rider.state, rider.risk_score, deltaT);
+        riderState.set(rider.id, entry);
+      }
+
+      entry.rawBackendLatLng = rawLatLng;
+      entry.state = rider.state;
+      entry.riskScore = rider.risk_score;
+      entry.deltaT = deltaT;
+
+      if (isRerouteState(rider.state)) {
+        const routeKey = `${rider.id}::${rider.route_revision || 'default'}`;
+        entry.routeId = routeKey;
+
+        if (routesCache.has(routeKey)) {
+          entry.targetLatLng = snapToRoute(rawLatLng, routesCache.get(routeKey));
+        } else {
+          entry.targetLatLng = rawLatLng; // Move immediately while route fetches
+          fetchAndCacheRoute(routeKey, rawLatLng, rider, rider.route_waypoints)
+            .then(cached => {
+              if (cached && riderState.has(rider.id)) {
+                riderState.get(rider.id).targetLatLng = snapToRoute(
+                  riderState.get(rider.id).rawBackendLatLng, cached
+                );
+              }
+            }).catch(err => console.warn("Route fetch failed, falling back to raw GPS:", err));
+        }
+      } else {
+        entry.targetLatLng = rawLatLng;
+      }
+
+      updateSidebarCard(entry);
+      updateTooltip(entry);
+    }
+
+    function isRerouteState(state) {
+      return state === 'CRITICAL' || state === 'REROUTE' || state === 'REROUTED';
+    }
+
+    // ---------------------------------------------------------------------------
+    // DYNAMIC DELTA-T RESOLUTION
+    // ---------------------------------------------------------------------------
+    function resolveDeltaT(id, deltaTRaw) {
+      const parsed = parseFloat(deltaTRaw);
+      if (!isNaN(parsed)) return parsed;
+      const existing = riderState.get(id);
+      return existing ? existing.deltaT : null;
+    }
+
+    function formatDeltaT(deltaT) {
+      if (deltaT == null) return '—';
+      return `${deltaT > 0 ? '+' : ''}${deltaT.toFixed(1)}°C`;
+    }
+
+    // ---------------------------------------------------------------------------
+    // OSRM FETCH + CACHE (called exactly once per routeKey)
+    // ---------------------------------------------------------------------------
+    async function fetchAndCacheRoute(routeKey, currentLatLng, rider, explicitWaypoints) {
+      if (routesCache.has(routeKey)) return routesCache.get(routeKey);
+      if (routesInFlight.has(routeKey)) return waitForCache(routeKey);
+
+      routesInFlight.add(routeKey);
+      try {
+        let coordsParam;
+        if (explicitWaypoints && explicitWaypoints.length >= 2) {
+          coordsParam = explicitWaypoints.map(([la, ln]) => `${parseFloat(ln)},${parseFloat(la)}`).join(';');
+        } else {
+          const dLng = parseFloat(rider.dest_lng);
+          const dLat = parseFloat(rider.dest_lat);
+          if (isNaN(dLng) || isNaN(dLat)) throw new Error('Missing destination for ' + routeKey);
+          coordsParam = `${currentLatLng.lng},${currentLatLng.lat};${dLng},${dLat}`;
+        }
+
+        const url = `https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`OSRM ${res.status}`);
+
+        const data = await res.json();
+        const coords = data.routes?.[0]?.geometry?.coordinates;
+        if (!coords || coords.length < 2) throw new Error('OSRM empty geometry');
+
+        const latlngs = coords.map(([lng, lat]) => L.latLng(parseFloat(lat), parseFloat(lng)));
+        const polyline = L.polyline(latlngs, {
+          color: '#38bdf8', weight: 4, dashArray: '8, 8', opacity: 0.9
+        }).addTo(map);
+
+        const cached = { latlngs, polyline };
+        routesCache.set(routeKey, cached);
+        return cached;
+      } finally {
+        routesInFlight.delete(routeKey);
+      }
+    }
+
+    function waitForCache(routeKey, timeoutMs = 5000) {
+      return new Promise((resolve, reject) => {
+        const start = performance.now();
+        const check = () => {
+          if (routesCache.has(routeKey)) resolve(routesCache.get(routeKey));
+          else if (performance.now() - start > timeoutMs) reject(new Error('Cache timeout: ' + routeKey));
+          else requestAnimationFrame(check);
+        };
+        check();
+      });
+    }
+
+    // ---------------------------------------------------------------------------
+    // SNAP-TO-POLYLINE (with try/catch fallback so it never crashes)
+    // ---------------------------------------------------------------------------
+    function snapToRoute(rawLatLng, cachedRoute) {
+      try {
+        const rawPoint = map.latLngToLayerPoint(rawLatLng);
+        let closestPoint = null, closestDist = Infinity;
+
+        for (let i = 0; i < cachedRoute.latlngs.length - 1; i++) {
+          const a = map.latLngToLayerPoint(cachedRoute.latlngs[i]);
+          const b = map.latLngToLayerPoint(cachedRoute.latlngs[i + 1]);
+          const abx = b.x - a.x, aby = b.y - a.y;
+          const lengthSq = abx * abx + aby * aby;
+          let t = lengthSq === 0 ? 0 : ((rawPoint.x - a.x) * abx + (rawPoint.y - a.y) * aby) / lengthSq;
+          t = Math.max(0, Math.min(1, t));
+          const projPoint = L.point(a.x + t * abx, a.y + t * aby);
+          const dist = rawPoint.distanceTo(projPoint);
+          if (dist < closestDist) { closestDist = dist; closestPoint = projPoint; }
+        }
+        return closestPoint ? map.layerPointToLatLng(closestPoint) : rawLatLng;
+      } catch (e) {
+        return rawLatLng; // Safe fallback if snapping fails
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // RIDER ENTRY CREATION
+    // ---------------------------------------------------------------------------
+    function createRiderEntry(id, initialLatLng, state, riskScore, deltaT) {
+      const marker = L.marker(initialLatLng, { icon: buildRiderIcon(id, state) }).addTo(map);
+      marker.bindTooltip('', { permanent: false, direction: 'top', className: 'coolpath-tooltip' });
+      return {
+        marker, currentLatLng: initialLatLng, targetLatLng: initialLatLng, rawBackendLatLng: initialLatLng,
+        state, riskScore, deltaT, routeId: null,
+        sidebarEl: document.querySelector(`[data-rider-id="${id}"]`), id,
+      };
+    }
+
+    function buildRiderIcon(id, state) {
+      const color = state === 'CRITICAL' ? '#ef4444' : (state === 'HIGH' || state === 'MODERATE' ? '#f59e0b' : '#10b981');
+      return L.divIcon({
+        className: 'rider-icon',
+        html: `<div style="background:${color}; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:10px; border: 2px solid white; box-shadow: 0 0 10px ${color};">${id}</div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14],
+      });
+    }
+
+    // ---------------------------------------------------------------------------
+    // BULLETPROOF ANIMATION LOOP — try/catch per rider, never dies
+    // ---------------------------------------------------------------------------
+    const ANIM_SNAP_SPEED = 0.2;  // Faster so markers don't lag behind GPS updates
+    const MIN_MOVE_METERS = 1.0;
+
+    function animationTick() {
+      try {
+        for (const entry of riderState.values()) {
+          if (!entry.targetLatLng) continue;
+          try {
+            const distMeters = entry.currentLatLng.distanceTo(entry.targetLatLng);
+            if (distMeters < MIN_MOVE_METERS) {
+              entry.currentLatLng = entry.targetLatLng;
+            } else {
+              const nextLat = entry.currentLatLng.lat + (entry.targetLatLng.lat - entry.currentLatLng.lat) * ANIM_SNAP_SPEED;
+              const nextLng = entry.currentLatLng.lng + (entry.targetLatLng.lng - entry.currentLatLng.lng) * ANIM_SNAP_SPEED;
+              entry.currentLatLng = L.latLng(nextLat, nextLng);
+            }
+            entry.marker.setLatLng(entry.currentLatLng);
+          } catch (perRiderErr) {
+            // One bad rider must not freeze all others
+            try { entry.marker.setLatLng(entry.rawBackendLatLng || entry.targetLatLng); } catch (_) {}
+            console.warn(`Animation error for rider ${entry.id}, falling back:`, perRiderErr);
+          }
+        }
+      } catch (loopErr) {
+        console.error("Animation loop outer error:", loopErr);
+      }
+      requestAnimationFrame(animationTick);
+    }
+    requestAnimationFrame(animationTick);
+
+    // ---------------------------------------------------------------------------
+    // UI UPDATES
+    // ---------------------------------------------------------------------------
+    function updateSidebarCard(entry) {
+      const el = entry.sidebarEl || document.querySelector(`[data-rider-id="${entry.id}"]`);
+      if (!el) return;
+      entry.sidebarEl = el;
+
+      const riskEl = el.querySelector('[data-field="risk-score"]');
+      if (riskEl) riskEl.textContent = parseFloat(entry.riskScore || 0).toFixed(2);
+
+      const deltaEl = el.querySelector('[data-field="delta-t"]');
+      if (deltaEl) {
+        if (entry.deltaT != null) {
+          deltaEl.textContent = `SHADED DETOUR: ${formatDeltaT(entry.deltaT)} DROP`;
+          deltaEl.style.display = '';
+        } else if (entry.state === 'CRITICAL') {
+          deltaEl.textContent = `⚠️ MANDATORY REST STOP ENFORCED`;
+          deltaEl.style.display = '';
+        } else {
+          deltaEl.style.display = 'none';
+        }
+      }
+
+      const stateEl = el.querySelector('[data-field="state-pill"]');
+      if (stateEl) {
+        stateEl.textContent = entry.state;
+        stateEl.className = `state-pill state-${(entry.state || 'low').toLowerCase()}`;
+      }
+
+      if (entry.state === 'CRITICAL') {
+        el.classList.add('critical');
+      } else {
+        el.classList.remove('critical');
+      }
+    }
+
+    function updateTooltip(entry) {
+      const label = entry.deltaT != null
+        ? `Rider ${entry.id} · Risk ${parseFloat(entry.riskScore || 0).toFixed(2)} · ΔT ${formatDeltaT(entry.deltaT)}`
+        : `Rider ${entry.id} · Risk ${parseFloat(entry.riskScore || 0).toFixed(2)}`;
+      entry.marker.setTooltipContent(label);
+    }
+
+    function updateSummaryMetrics() {
+      let critCount = 0, rerouteCount = 0;
+      for (const entry of riderState.values()) {
+        if (entry.state === 'CRITICAL') critCount++;
+        if (isRerouteState(entry.state)) rerouteCount++;
+      }
+      const critPill = document.getElementById('summaryCriticalPill');
+      if (critPill) critPill.innerText = `${critCount} Critical`;
+      const rrPill = document.getElementById('summaryReroutedPill');
+      if (rrPill) rrPill.innerText = `${rerouteCount} Rerouted`;
+    }
+
+    function fetchIncidents() {
+      fetch('/api/v1/incidents')
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('feedContainer');
+          if (!container) return;
+          container.innerHTML = '';
+
+          const incidents = data.incidents || [];
+          if (incidents.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding:0.5rem;">No active incidents recorded.</div>';
+            return;
+          }
+
+          const heroInc = incidents[0];
+          const isCrit = heroInc.incident_type.includes('CRITICAL');
+          const isReroute = heroInc.incident_type.includes('REROUTE');
+
+          const heroCard = document.createElement('div');
+          heroCard.className = `incident-hero-card ${isReroute ? 'reroute-hero' : ''}`;
+          heroCard.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+              <span class="hero-badge ${isCrit ? 'critical' : 'reroute'}">${isCrit ? 'CRITICAL DISPATCH' : 'AUTONOMOUS REROUTE'}</span>
+              <span style="font-family:'JetBrains Mono'; font-size:0.65rem; color:var(--text-muted);">${heroInc.timestamp} MST</span>
+            </div>
+            <div style="font-weight:700; font-size:0.78rem; margin-bottom:0.25rem; color:var(--text-primary);">
+              ${heroInc.rider_id}: ${heroInc.incident_type.replace(/_/g, ' ')}
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-secondary); line-height:1.35;">
+              ${heroInc.osha_guideline || heroInc.destination_refuge || heroInc.action_taken}
+            </div>
+          `;
+          container.appendChild(heroCard);
+
+          const grouped = {};
+          incidents.slice(1, 15).forEach(inc => {
+            const timeKey = inc.timestamp || "Active";
+            if (!grouped[timeKey]) grouped[timeKey] = [];
+            grouped[timeKey].push(inc);
+          });
+
+          for (const [timeKey, groupItems] of Object.entries(grouped)) {
+            const groupHeader = document.createElement('div');
+            groupHeader.className = 'feed-time-group';
+            groupHeader.innerHTML = `<span>⏱</span> <span>${timeKey} MST Cluster</span>`;
+            container.appendChild(groupHeader);
+
+            groupItems.forEach(inc => {
+              const row = document.createElement('div');
+              row.className = 'incident-log-row';
+              const isRowCrit = inc.incident_type.includes('CRITICAL');
+              const isRowReroute = inc.incident_type.includes('REROUTE');
+              const tagClass = isRowCrit ? 'crit' : isRowReroute ? 'reroute' : 'warn';
+              const tagText = isRowCrit ? 'CRIT' : isRowReroute ? 'REROUTE' : 'WARN';
+
+              row.innerHTML = `
+                <span class="incident-log-time">${inc.timestamp}</span>
+                <span class="incident-log-tag ${tagClass}">[${tagText}]</span>
+                <span class="incident-log-text"><b>${inc.rider_id}</b>: ${(inc.action_taken || inc.incident_type).replace(/_/g, ' ')}</span>
+              `;
+              container.appendChild(row);
+            });
+          }
+        })
+        .catch(err => console.error("Error fetching incidents:", err));
+    }
+
+    // Playback Controls
+    function togglePlayback() {
+      isPlaying = !isPlaying;
+      if (window.coolPathSocket && window.coolPathSocket.readyState === WebSocket.OPEN) {
+        window.coolPathSocket.send(JSON.stringify({ command: isPlaying ? "play" : "pause" }));
+      }
+      updatePlayButton();
+    }
+
+    function updatePlayButton() {
+      document.getElementById('playIcon').innerText = isPlaying ? "⏸" : "▶";
+      document.getElementById('playLabel').innerText = isPlaying ? "Pause" : "Start";
+    }
+
+    function onScrubberChange(val) {
+      const h = Math.floor(val / 60);
+      const m = val % 60;
+      const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      if (window.coolPathSocket && window.coolPathSocket.readyState === WebSocket.OPEN) {
+        window.coolPathSocket.send(JSON.stringify({ command: "set_time", time: timeStr }));
+      }
+    }
+
+    function triggerDrillR3() { onScrubberChange(855); }
+    function triggerDrillR6() { onScrubberChange(940); }
+
+    // ENFORCE SINGLE WEBSOCKET — close any stale connection before opening a new one
+    function initCoolPathSocket(wsUrl) {
+      if (window.coolPathSocket) {
+        try { window.coolPathSocket.close(); } catch (_) {}
+      }
+      const socket = new WebSocket(wsUrl);
+      socket.onmessage = handleWebSocketMessage;
+      socket.onclose = () => setTimeout(() => initCoolPathSocket(wsUrl), 2000);
+      socket.onerror = (err) => console.warn("CoolPath WS error:", err);
+      window.coolPathSocket = socket;
+      return socket;
+    }
+
+    // Single startup entry point
+    window.onload = () => {
+      initMap();
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      initCoolPathSocket(`${wsProtocol}//${window.location.host}/ws/fleet`);
+      fetchIncidents();
+    };
+  </script>
+</body>
+</html>

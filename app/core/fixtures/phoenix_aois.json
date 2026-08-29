@@ -1,0 +1,206 @@
+{
+  "aois": {
+    "downtown_phoenix": {
+      "aoi_id": "downtown_phoenix",
+      "name": "Downtown Phoenix",
+      "aoi_type": "dense_urban_core",
+      "center": {
+        "lat": 33.4484,
+        "lng": -112.0740
+      },
+      "bbox": {
+        "min_lat": 33.4434,
+        "max_lat": 33.4534,
+        "min_lng": -112.0790,
+        "max_lng": -112.0690
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-112.0790, 33.4434],
+                  [-112.0690, 33.4434],
+                  [-112.0690, 33.4534],
+                  [-112.0790, 33.4534],
+                  [-112.0790, 33.4434]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Classic urban heat island: tall commercial buildings, low tree canopy, high restaurant & delivery density."
+    },
+    "arcadia_residential": {
+      "aoi_id": "arcadia_residential",
+      "name": "Arcadia Residential Grid",
+      "aoi_type": "suburban_residential",
+      "center": {
+        "lat": 33.4580,
+        "lng": -112.0300
+      },
+      "bbox": {
+        "min_lat": 33.4530,
+        "max_lat": 33.4630,
+        "min_lng": -112.0350,
+        "max_lng": -112.0250
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-112.0350, 33.4530],
+                  [-112.0250, 33.4530],
+                  [-112.0250, 33.4630],
+                  [-112.0350, 33.4630],
+                  [-112.0350, 33.4530]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Single-family residential neighborhood with wide exposed asphalt streets and moderate tree coverage."
+    },
+    "encanto_park": {
+      "aoi_id": "encanto_park",
+      "name": "Encanto Park Shaded Refuge",
+      "aoi_type": "park_shaded_refuge",
+      "center": {
+        "lat": 33.4270,
+        "lng": -112.0870
+      },
+      "bbox": {
+        "min_lat": 33.4220,
+        "max_lat": 33.4320,
+        "min_lng": -112.0920,
+        "max_lng": -112.0820
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-112.0920, 33.4220],
+                  [-112.0820, 33.4220],
+                  [-112.0820, 33.4320],
+                  [-112.0920, 33.4320],
+                  [-112.0920, 33.4220]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Key shaded urban park refuge: mature tree canopy (48%), lagoon water cooling effect, and shaded ramadas."
+    },
+    "van_buren_corridor": {
+      "aoi_id": "van_buren_corridor",
+      "name": "Van Buren Industrial Corridor",
+      "aoi_type": "exposed_industrial",
+      "center": {
+        "lat": 33.4480,
+        "lng": -112.0450
+      },
+      "bbox": {
+        "min_lat": 33.4430,
+        "max_lat": 33.4530,
+        "min_lng": -112.0500,
+        "max_lng": -112.0400
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-112.0500, 33.4430],
+                  [-112.0400, 33.4430],
+                  [-112.0400, 33.4530],
+                  [-112.0500, 33.4530],
+                  [-112.0500, 33.4430]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Worst-case heat zone: vast unshaded asphalt parking, industrial roofs, 0% tree canopy, intense persistence."
+    }
+  },
+  "baselines": {
+    "downtown_phoenix": {
+      "surface_temp_c": 42.8,
+      "heat_index_c": 44.5,
+      "apparent_temp_c": 43.1,
+      "wet_bulb_c": 22.4,
+      "humidity_pct": 21.0,
+      "persistence_hours": 6.5,
+      "exceedance_hours": 8.0,
+      "canopy_percentage": 9.5,
+      "street_shade_percentage": 24.0,
+      "solar_ghi": 880.0,
+      "aqi": 62.0
+    },
+    "arcadia_residential": {
+      "surface_temp_c": 39.5,
+      "heat_index_c": 40.8,
+      "apparent_temp_c": 39.8,
+      "wet_bulb_c": 21.0,
+      "humidity_pct": 22.0,
+      "persistence_hours": 4.5,
+      "exceedance_hours": 6.0,
+      "canopy_percentage": 18.0,
+      "street_shade_percentage": 16.0,
+      "solar_ghi": 870.0,
+      "aqi": 52.0
+    },
+    "encanto_park": {
+      "surface_temp_c": 33.4,
+      "heat_index_c": 34.2,
+      "apparent_temp_c": 33.0,
+      "wet_bulb_c": 19.5,
+      "humidity_pct": 28.0,
+      "persistence_hours": 1.0,
+      "exceedance_hours": 2.0,
+      "canopy_percentage": 48.5,
+      "street_shade_percentage": 58.0,
+      "solar_ghi": 720.0,
+      "aqi": 42.0
+    },
+    "van_buren_corridor": {
+      "surface_temp_c": 46.2,
+      "heat_index_c": 48.9,
+      "apparent_temp_c": 47.5,
+      "wet_bulb_c": 23.8,
+      "humidity_pct": 19.0,
+      "persistence_hours": 9.5,
+      "exceedance_hours": 11.5,
+      "canopy_percentage": 1.2,
+      "street_shade_percentage": 4.0,
+      "solar_ghi": 920.0,
+      "aqi": 78.0
+    }
+  }
+}
