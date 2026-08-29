@@ -4,6 +4,9 @@
 
 Built for the FortyGuard Global AI Hackathon — Agentic AI Track
 
+🔗 **Live Demo:** [https://coolpath.onrender.com/]
+🎥 **Video:** [your video link here] , [https://drive.google.com/file/d/1rxkTe-e2_7-14p3REPjgug6fTLqngtjA/view?usp=sharing]
+
 ---
 
 ## The Problem
@@ -21,12 +24,6 @@ CoolPath is a network of autonomous AI agents that continuously monitor hyperloc
 - 📋 **Explains every decision** in plain language, grounded in the exact sensor data and safety standard behind it
 
 No human intervention required. The system watches, decides, and acts.
-
----
-
-## Why This Is Different
-
-A car's thermometer tells you it's hot right now, where the vehicle is. It can't tell you a zone has been dangerously hot for the last 40 minutes, can't compare your route against a cooler alternative, and can't act. CoolPath closes exactly that gap — from *sensing* to *deciding* to *acting*, autonomously.
 
 ---
 
@@ -65,34 +62,122 @@ Score = 0.40·(1 − NormTemp) + 0.35·Canopy% + 0.25·StreetShade% − 0.20·(D
 
 ---
 
-## Built With
+## Running It From Scratch
 
-- **[FortyGuard Temperature API](https://fortyguard.com)** — hyperlocal thermal heatmaps, environmental parameters, satellite canopy and street-view shade segmentation
-- **FastAPI** + **WebSockets** — real-time backend and live dashboard streaming
-- **LangGraph** — multi-agent orchestration
-- **Leaflet** + **OpenStreetMap** — live fleet visualization
-- **Redis** — layered caching for sub-10ms decision latency
-- **Python**, **Pydantic**, **APScheduler**
+### Requirements
+- Python 3.11+
+- A FortyGuard API key ([get one here](https://fortyguard.com))
+- Redis (optional — the app runs on an in-process cache fallback if Redis isn't available, see *What Doesn't Work Yet* below)
 
----
-
-## Running Locally
+### Setup
 
 ```bash
 git clone https://github.com/<your-org>/coolpath.git
 cd coolpath
 pip install -r requirements.txt
-cp .env.example .env   # add your FortyGuard API key
-uvicorn app.api.server:app --reload
 ```
 
-Open `http://localhost:8000` for the live fleet dashboard.
+### Environment Variables
+
+Create a `.env` file in the project root with the following:
+
+```env
+FORTYGUARD_API_KEY=your_api_key_here
+FORTYGUARD_API_BASE_URL=https://api.fortyguard.com
+REDIS_URL=redis://localhost:6379/0        # optional — omit to use in-process cache
+LOG_LEVEL=INFO
+```
+
+### Run
+
+```bash
+uvicorn app.api.server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Confirm It's Working
+
+1. Open `http://localhost:8000` — you should see the live fleet dashboard load with the Phoenix map
+2. Within a few seconds, 6 rider markers should appear and begin moving
+3. Check `http://localhost:8000/api/v1/health` — should return `{"status": "ok"}`
+4. Watch the sidebar — as the simulation clock advances, rider risk scores and the Autonomous Decision Feed should update automatically
+
+If markers don't move or the feed stays empty, check your terminal logs — most commonly this means the `FORTYGUARD_API_KEY` is missing or invalid, in which case the system will fall back to synthesized baseline data (see below) rather than fail outright.
 
 ---
 
-## Data Transparency
+## What Doesn't Work Yet
 
-Every data point CoolPath reports carries an explicit `is_synthesized` flag, showing whether it came from a live FortyGuard call or a graceful fallback. We believe an autonomous safety system should never quietly guess — if live data isn't available, the system says so.
+We believe in disclosing this clearly rather than letting a judge discover it unexpectedly:
+
+- **FortyGuard Premium segmentation endpoints (`satellite_segmentation`, `street_view_segmentation`) are not used live in the current demo.** During development, these two endpoints experienced an extended outage on FortyGuard's platform side (tasks submitted successfully but never transitioned out of `processing`, even after 120+ second timeouts). We reported this to the FortyGuard team but did not receive a resolution in time for submission. As a result, our Refuge Score's canopy% and street-shade% inputs currently run on synthesized baseline estimates rather than live satellite/street-view data. **Our Thermal Risk Score — the core decision driver — is unaffected and runs on fully live FortyGuard data** (`heatmap` and `env_params` endpoints, both healthy throughout development).
+- **Every data point carries an explicit `is_synthesized` flag** in the API response, so it's always possible to see, per field, whether a given number came from a live FortyGuard call or a fallback estimate. We built this transparency mechanism specifically so the system never silently guesses.
+- **Redis caching has a graceful fallback, not a hard dependency.** If Redis is unavailable (as in some local dev environments), the system automatically falls back to an in-process cache. This preserves correctness but means cached data isn't shared across multiple server processes — fine for this demo's single-process deployment, not yet built for horizontal scaling.
+- **Rider movement in the demo is simulated, not live GPS.** The 6-rider fleet follows precomputed, road-accurate paths (via OSRM) between fixed Phoenix waypoints on a scripted timeline (1:00 PM–4:40 PM), not real-time GPS ingestion from an actual delivery fleet. The multi-agent decision pipeline itself runs identically regardless of whether telemetry is simulated or real.
+- **No production-grade authentication or multi-tenant support yet** — this is a single-fleet demo, not a deployed SaaS product.
+
+---
+
+## A Real FortyGuard API Request + Response
+
+Below is an actual request/response pair from our system calling FortyGuard's `env_params` endpoint for a rider position in the Van Buren Corridor, Phoenix, AZ. API key redacted; everything else is genuine, unedited output.
+
+**Request:**
+```http
+POST https://api.fortyguard.com/v1/env_params
+Authorization: Bearer ***REDACTED***
+Content-Type: application/json
+
+{
+  "latitude": 33.448,
+  "longitude": -112.045,
+  "temperature": 40.0,
+  "date_time": {
+    "start_date": "2026-08-03",
+    "filter_type": 1,
+    "start_time": "14:00"
+  },
+  "analysis": [
+    "heat_index_celsius",
+    "apparent_temperature_celsius",
+    "relative_humidity_percent",
+    "air_quality:idx"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "matched_tile_id": "35",
+  "tile_temperature_c": 40.0,
+  "heat_index_c": 37.7,
+  "apparent_temperature_c": 46.1,
+  "wet_bulb_c": 23.4,
+  "relative_humidity_pct": 14.0,
+  "solar_irradiance_ghi": 903.8,
+  "aqi": 60.8,
+  "persistence_hours": 1.0,
+  "exceedance_hours": 1.0,
+  "is_synthesized": false,
+  "data_source_summary": {
+    "env_params": "live_fortyguard_api",
+    "heatmap_tiles": "live_fortyguard_api"
+  }
+}
+```
+
+This response fed directly into our Risk Scoring Agent, which computed a Thermal Risk Score of **0.39 (Moderate / OSHA Caution tier)** for this rider at this exact position and time, triggering an automatic hydration advisory.
+
+---
+
+## Built With
+
+- **[FortyGuard Temperature API](https://fortyguard.com)** — hyperlocal thermal heatmaps, environmental parameters, satellite canopy and street-view shade segmentation
+- **FastAPI** + **WebSockets** — real-time backend and live dashboard streaming
+- **LangGraph** — multi-agent orchestration
+- **Leaflet** + **OpenStreetMap** + **OSRM** — live fleet visualization with road-accurate routing
+- **Redis** (with in-process fallback) — layered caching for sub-10ms decision latency
+- **Python**, **Pydantic**, **APScheduler**
 
 ---
 
@@ -103,3 +188,7 @@ Built by [Omar Elborollosy] and [Ahmed Sami] for the FortyGuard Global AI Hackat
 ## Acknowledgments
 
 Huge thanks to **FortyGuard** for providing the Temperature API and hyperlocal heat intelligence that makes CoolPath possible, and for hosting the Global AI Hackathon.
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
