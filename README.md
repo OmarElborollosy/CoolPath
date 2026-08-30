@@ -5,7 +5,7 @@
 Built for the FortyGuard Global AI Hackathon — Agentic AI Track
 
 🔗 **Live Demo:** [https://coolpath.onrender.com/]
-🎥 **Video:** [your video link here] , [https://drive.google.com/file/d/1rxkTe-e2_7-14p3REPjgug6fTLqngtjA/view?usp=sharing]
+🎥 **Video:** [https://youtu.be/qfhL4tzNiF0] , [https://drive.google.com/file/d/1rxkTe-e2_7-14p3REPjgug6fTLqngtjA/view?usp=sharing]
 
 ---
 
